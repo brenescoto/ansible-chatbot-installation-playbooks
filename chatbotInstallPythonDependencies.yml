@@ -1,0 +1,39 @@
+---
+  - hosts: managedhosts
+    name: Installing software dependencies
+
+    gather_facts: no 
+    tasks:
+    
+      - name: installing python 3.6
+        yum: 
+          name: python36
+          state: latest
+
+      - name: installing git
+        yum: 
+          name: git
+          state: latest
+   
+      - name: installing nltk
+        pip:
+          name: nltk
+
+      - name: installing tflearn
+        pip:
+          name: tflearn
+
+      - name: installing numpy
+        pip:
+          name: numpy
+
+      - name: installing tensorflow
+        pip:
+          name: tensorflow
+
+      - name: installing flask
+        pip:
+          name: flask
+
+### Reversing the playbook's changes
+### /usr/bin/yes | pip3 uninstall nltk tflearn numpy tensorflow flask && yum remove python36 -y && yum remove git -y

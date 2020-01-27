@@ -1,0 +1,14 @@
+---
+
+  - import_playbook: chatbotCreateFilesystem.yml
+  - import_playbook: chatbotInstallPythonDependencies.yml
+  - import_playbook: chatbotInstallSoftware.yml
+  - import_playbook: chatbotStartServices.yml
+  - import_playbook: chatbotRebootServer.yml
+
+
+### Reversing the playbook's changes
+### systemctl stop ansibleChatbot && systemctl disable ansibleChatbot && systemctl stop ansibleChatbotWebInterface && systemctl disable ansibleChatbotWebInterface
+### rm -rf /etc/systemd/system/ansibleChatbot.service && rm -rf /etc/systemd/system/ansibleChatbotWebInterface.service && rm -rf /home/chatbot/* && firewall-cmd --permanent --remove-port=8080/tcp && firewall-cmd --permanent --remove-port=9095/tcp
+### /usr/bin/yes | pip3 uninstall nltk tflearn numpy tensorflow flask && yum remove python36 -y && yum remove git -y && yum remove nmap-ncat  -y
+### umount /home/chatbot && rm -rf /home/chatbot && lvremove /dev/chatbotVG/data && vgremove chatbotVG && pvremove /dev/sdb /dev/sdc

@@ -1,0 +1,22 @@
+---
+  - hosts: managedhosts
+    name: Starting chatbot services
+    gather_facts: no
+
+    tasks:
+
+      - name: enable ansibleChatbot service
+        systemd:
+          name: ansibleChatbot
+          state: started
+          enabled: yes
+
+      - name: enable ansibleChatbotWebInterface service
+        systemd:
+          name: ansibleChatbotWebInterface
+          state: started
+          enabled: yes
+
+### Reversing the playbook's changes
+### systemctl stop ansibleChatbot && systemctl disable ansibleChatbot && systemctl stop ansibleChatbotWebInterface && systemctl disable ansibleChatbotWebInterface
+

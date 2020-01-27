@@ -1,0 +1,77 @@
+---
+  - hosts: tower
+  
+    name: Ansible Tower Installation
+    gather_facts: no
+  
+  
+    vars:
+      dest: '/root/tower'
+      source: 'https://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-latest.tar.gz'
+      filename: 'ansible-tower-setup-latest.tar.gz'
+      
+    
+    tasks:
+
+    - name: installing tar package
+      yum:
+        name: tar
+        state: latest  
+    
+    - name: Create a directory if it does not exist
+      file:
+        path: '{{ dest }}'
+        state: directory
+        mode: '0700'
+
+    - name: Getting the software
+      get_url:
+        url: '{{ source }}'
+        dest: '{{ dest }}/{{ filename }}'
+                
+    - name: Extracting package
+      unarchive:
+        src: '{{ dest }}/ansible-tower-setup-latest.tar.gz'
+        dest: '{{ dest }}/.'
+        remote_src: yes
+
+    - name: get the final directory
+      shell: 'ls -d {{dest}}/*/'
+      register: finalDir
+
+    - name: Setting admin password
+      lineinfile:
+        path: '{{ finalDir.stdout }}inventory'
+        state: present
+        regexp: "^admin_password=''"
+        line: "admin_password='ltodemos'"
+
+    - name: Setting database password
+      lineinfile:
+        path: '{{ finalDir.stdout }}inventory'
+        state: present
+        regexp: "^pg_password=''"
+        line: "pg_password='ltodemos'"
+
+    - name: Setting rabbit mq password
+      lineinfile:
+        path: '{{ finalDir.stdout }}inventory'
+        state: present
+        regexp: "^rabbitmq_password=''"
+        line: "rabbitmq_password='ltodemos'"
+
+    - name: Installing Tower
+      shell: './setup.sh'
+      args:
+        chdir: '{{ finalDir.stdout }}'
+      register: output
+
+    - name: Reboot host and wait for it to restart
+      reboot:
+        msg: "Rebootng the server"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: "whoami"
+

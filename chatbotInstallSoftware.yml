@@ -1,0 +1,46 @@
+---
+  - hosts: managedhosts
+    name: Installing chatbot software
+    gather_facts: no
+    tasks:
+
+    - name: Clonning the chatbot software repository
+      git:
+        repo: 'https://github.com/ltoRhelDemos/python-ansible-chatbot.git'
+        dest: /home/chatbot/
+        force: yes
+
+    - name: copying ansibleChatbot.service template to /etc/systemd/system
+      copy:
+        src: /home/chatbot/ansibleChatbot.service
+        dest: /etc/systemd/system
+        remote_src: yes
+        mode: '0644'
+
+    - name: copying ansibleChatbotWebInterface.service template to /etc/systemd/system
+      copy:
+        src: /home/chatbot/ansibleChatbotWebInterface.service
+        dest: /etc/systemd/system
+        remote_src: yes
+        mode: '0644'
+
+    - name: Openning the webservice port 8080
+      firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+
+    - name: Openning the engine port 9095
+      firewalld:
+        port: 9095/tcp
+        permanent: yes
+        state: enabled
+
+    - name: restarting the firewalld
+      service:
+        name: firewalld
+        state: restarted
+
+### Reversing the playbook's changes
+### rm -rf /etc/systemd/system/ansibleChatbot.service && rm -rf /etc/systemd/system/ansibleChatbotWebInterface.service && rm -rf /home/chatbot/* && firewall-cmd --permanent --remove-port=8080/tcp && firewall-cmd --permanent --remove-port=9095/tcp
+

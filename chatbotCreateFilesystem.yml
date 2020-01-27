@@ -1,0 +1,83 @@
+---
+  - hosts: managedhosts
+
+    name: Creating the chatbot filesystem
+
+    tasks:
+
+      - name: check sdb
+        block:
+          - name: checking for device /dev/sdb
+            set_fact: proceedWithInstallation=yes
+            when:  hostvars[inventory_hostname]["ansible_facts"]["device_links"]["ids"]["sdb"] 
+        rescue:
+          - name: Device /dev/sdb does not exists!
+            set_fact: proceedWithInstallation=no
+          
+
+      - name: check sdc
+        block:
+          - name: checking for device /dev/sdc
+            set_fact: proceedWithInstallation=yes
+            when:  hostvars[inventory_hostname]["ansible_facts"]["device_links"]["ids"]["sdc"] 
+        rescue:
+          - name: Device /dev/sdc does not exists!
+            set_fact: proceedWithInstallation=no
+        when:
+          - hostvars[inventory_hostname]['proceedWithInstallation']
+                        
+                
+      - name: creating disk facilities
+        block:
+          - name: Creating chatbot Volume group.
+            lvg:
+              pvs: "/dev/sdb,/dev/sdc"
+              vg: "chatbotVG"
+              pesize: '8'
+              pv_options: '-Z y'
+              force: no
+              state: present
+
+          - name: Creating data Logical Volume.
+            lvol:
+              vg: "chatbotVG"
+              lv: "data"
+              size: 4g
+              active: yes
+              force: no
+              state: present
+
+          - name: Creating a XFS filesystem on lvm /dev/mapper/chatbotVG-data.
+            filesystem:
+              fstype: "xfs"
+              dev: "/dev/mapper/chatbotVG-data"
+              force: no
+
+          - name: Creating the mounting point /home/chatbot.
+            file:
+              path: "/home/chatbot/"
+              state: directory
+              mode: '0700'
+
+          - name: Mount the  filesystem.
+            mount:
+              path: "/home/chatbot"
+              src: "/dev/mapper/chatbotVG-data"
+              fstype: "xfs"
+              opts: rw,nosuid,noexec
+              state: mounted
+
+        when:
+          - hostvars[inventory_hostname]['proceedWithInstallation']
+
+        
+      - name: Error on disk creation results
+        debug: 
+          msg: "An error occured when trying to create the disk facilities for the chatbot, aborting installation! {{hostvars[inventory_hostname]['proceedWithInstallation']}}"
+        when:  
+          - not hostvars[inventory_hostname]['proceedWithInstallation']
+          
+
+
+### Reversing the playbook's changes
+### umount /home/chatbot && rm -rf /home/chatbot && lvremove /dev/chatbotVG/data && vgremove chatbotVG && pvremove /dev/sdb /dev/sdc

@@ -1,0 +1,6 @@
+[managedhosts] 
+192.168.56.134
+192.168.56.129
+
+[tower]
+localhost
