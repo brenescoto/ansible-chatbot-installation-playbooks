@@ -10,9 +10,9 @@
         dest: /home/chatbot/
         force: yes
 
-    - name: copying ansibleChatbot.service template to /etc/systemd/system
+    - name: copying ansibleChatbotEngine.service template to /etc/systemd/system
       copy:
-        src: /home/chatbot/ansibleChatbot.service
+        src: /home/chatbot/ansibleChatbotEngine.service
         dest: /etc/systemd/system
         remote_src: yes
         mode: '0644'
