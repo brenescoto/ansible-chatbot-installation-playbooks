@@ -5,9 +5,9 @@
 
     tasks:
 
-      - name: enable ansibleChatbot service
+      - name: enable ansibleChatbotEngine service
         systemd:
-          name: ansibleChatbot
+          name: ansibleChatbotEngine
           state: started
           enabled: yes
 
