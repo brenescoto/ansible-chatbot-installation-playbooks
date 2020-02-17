@@ -1,7 +1,10 @@
 ---
-  - hosts: managedhosts
+  - name: Creating the chatbot filesystem
 
-    name: Creating the chatbot filesystem
+    hosts: '{{ hosts2manage | default("managedhosts") }}'
+
+    become: yes
+    become_user: root
 
     tasks:
 
@@ -9,24 +12,23 @@
         block:
           - name: checking for device /dev/sdb
             set_fact: proceedWithInstallation=yes
-            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdb"] 
+            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdb"]
         rescue:
-          - name: Device /dev/sdb does not exists!
+          - name: Device /dev/sdb does not exist!
             set_fact: proceedWithInstallation=no
-          
+
 
       - name: check sdc
         block:
           - name: checking for device /dev/sdc
             set_fact: proceedWithInstallation=yes
-            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdc"] 
+            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdc"]
         rescue:
-          - name: Device /dev/sdc does not exists!
+          - name: Device /dev/sdc does not exist!
             set_fact: proceedWithInstallation=no
         when:
           - hostvars[inventory_hostname]['proceedWithInstallation']
-                        
-                
+          
       - name: creating disk facilities
         block:
           - name: Creating chatbot Volume group.
@@ -69,14 +71,9 @@
         when:
           - hostvars[inventory_hostname]['proceedWithInstallation']
 
-        
+
       - name: Error on disk creation results
-        debug: 
+        debug:
           msg: "An error occured when trying to create the disk facilities for the chatbot, aborting installation! {{hostvars[inventory_hostname]['proceedWithInstallation']}}"
-        when:  
-          - not hostvars[inventory_hostname]['proceedWithInstallation']
-          
-
-
-### Reversing the playbook's changes
-### umount /home/chatbot && rm -rf /home/chatbot && lvremove /dev/chatbotVG/data && vgremove chatbotVG && pvremove /dev/sdb /dev/sdc
+        when:
+          - not hostvars[inventory_hostname]['proceedWithInstallation']          
