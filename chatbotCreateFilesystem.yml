@@ -6,34 +6,38 @@
     become: yes
     become_user: root
 
+    vars:
+      disk1: "sdb"
+      disk2: "sdc"
+
     tasks:
 
-      - name: check sdb
+      - name: check {{disk1}}
         block:
-          - name: checking for device /dev/sdb
+          - name: checking for device /dev/{{disk1}}
             set_fact: proceedWithInstallation=yes
-            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdb"]
+            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["{{disk1}}"]
         rescue:
-          - name: Device /dev/sdb does not exist!
+          - name: Device /dev/{{disk1}} does not exist!
             set_fact: proceedWithInstallation=no
 
 
-      - name: check sdc
+      - name: check {{disk2}}
         block:
-          - name: checking for device /dev/sdc
+          - name: checking for device /dev/{{disk2}}
             set_fact: proceedWithInstallation=yes
-            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["sdc"]
+            when:  hostvars[inventory_hostname]["ansible_facts"]["devices"]["{{disk2}}"]
         rescue:
           - name: Device /dev/sdc does not exist!
             set_fact: proceedWithInstallation=no
         when:
           - hostvars[inventory_hostname]['proceedWithInstallation']
-          
+
       - name: creating disk facilities
         block:
           - name: Creating chatbot Volume group.
             lvg:
-              pvs: "/dev/sdb,/dev/sdc"
+              pvs: "/dev/{{disk1}},/dev/{{disk2}}"
               vg: "chatbotVG"
               pv_options: '-Z y'
               force: no
@@ -74,6 +78,7 @@
 
       - name: Error on disk creation results
         debug:
-          msg: "An error occured when trying to create the disk facilities for the chatbot, aborting installation! {{hostvars[inventory_hostname]['proceedWithInstallation']}}"
+          msg: "An error occured when trying to create the disk facilities for the chatbot, aborting installation! {{hostvars[inventory_hostnam
+e]['proceedWithInstallation']}}"
         when:
-          - not hostvars[inventory_hostname]['proceedWithInstallation']          
+          - not hostvars[inventory_hostname]['proceedWithInstallation']
