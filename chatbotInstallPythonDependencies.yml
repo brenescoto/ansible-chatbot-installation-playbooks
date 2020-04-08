@@ -1,39 +1,57 @@
 ---
-  - hosts: managedhosts
-    name: Installing software dependencies
+  - name: Installing software dependencies
 
-    gather_facts: no 
+    hosts: '{{ hosts2manage | default("managedhosts") }}'
+
+    become: yes
+    become_user: root
+
+    gather_facts: no
+
     tasks:
-    
-      - name: installing python 3.6
-        yum: 
-          name: python36
-          state: latest
+      - name: Setting default values
+        set_fact: proceedWithInstallation=yes
 
-      - name: installing git
-        yum: 
-          name: git
-          state: latest
-   
-      - name: installing nltk
-        pip:
-          name: nltk
+      - name: Installing required packages
+        block:
+          - name: yum install...
+            yum:
+              name: "{{ item }}"
+              state: latest
+            loop:
+              - python3
+              - python3-devel
+              - git
+              - firewalld
+        rescue:
+          - name: Error installing required packages!
+            set_fact: proceedWithInstallation=no
 
-      - name: installing tflearn
-        pip:
-          name: tflearn
+      - name: Installing required python libraries
+        block:
+          - name: pip install...
+            pip:
+              name: "{{ item }}"
+              state: latest
+              extra_args: --no-cache-dir
+            loop:
+              - nltk
+              - tflearn
+              - numpy
+              - flask
 
-      - name: installing numpy
-        pip:
-          name: numpy
+          - name: pip installing tensorflow
+            pip:
+              name: tensorflow
+              version: "1.5"
+              extra_args: --no-cache-dir
 
-      - name: installing tensorflow
-        pip:
-          name: tensorflow
+        rescue:
+          - name: Error installing requires python libraries!
+            set_fact: proceedWithInstallation=no
 
-      - name: installing flask
-        pip:
-          name: flask
-
-### Reversing the playbook's changes
-### /usr/bin/yes | pip3 uninstall nltk tflearn numpy tensorflow flask && yum remove python36 -y && yum remove git -y
+      - name: enable firewalld service
+        systemd:
+          name: firewalld
+          state: started
+          enabled: yes
