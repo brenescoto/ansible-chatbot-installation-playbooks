@@ -1,5 +1,5 @@
 ---
-  - hosts: managedhosts
+  - hosts: '{{ hosts2manage | default("managedhosts") }}'
     name: Rebooting...
     gather_facts: no
     
