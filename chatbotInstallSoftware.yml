@@ -1,8 +1,17 @@
 ---
-  - hosts: managedhosts
-    name: Installing chatbot software
+  - name: Installing chatbot software
+
+    hosts: '{{ hosts2manage | default("managedhosts") }}'
+
+    become: yes
+    become_user: root
+
     gather_facts: no
+
     tasks:
+
+    - name: Setting reboot to "no" unless needed
+      set_fact: reboot=no
 
     - name: Clonning the chatbot software repository
       git:
@@ -10,36 +19,32 @@
         dest: /home/chatbot/
         force: yes
 
-    - name: copying ansibleChatbotEngine.service template to /etc/systemd/system
+    - name: copying files template to /etc/systemd/system
       copy:
-        src: /home/chatbot/ansibleChatbotEngine.service
+        src: "{{ item }}"
         dest: /etc/systemd/system
         remote_src: yes
         mode: '0644'
+      loop:
+        - /home/chatbot/ansibleChatbotEngine.service
+        - /home/chatbot/ansibleChatbotWebInterface.service
 
-    - name: copying ansibleChatbotWebInterface.service template to /etc/systemd/system
-      copy:
-        src: /home/chatbot/ansibleChatbotWebInterface.service
-        dest: /etc/systemd/system
-        remote_src: yes
-        mode: '0644'
-
-    - name: Openning the webservice port 8080
+    - name: Openning the webservice ports
       firewalld:
-        port: 8080/tcp
+        port: "{{ item }}"
         permanent: yes
         state: enabled
+      loop:
+        - 8080/tcp
+        - 9095/tcp
+      notify: "restart firewalld"
 
-    - name: Openning the engine port 9095
-      firewalld:
-        port: 9095/tcp
-        permanent: yes
-        state: enabled
-
+    handlers:
     - name: restarting the firewalld
       service:
         name: firewalld
         state: restarted
+      listen: "restart firewalld"
 
 ### Reversing the playbook's changes
 ### rm -rf /etc/systemd/system/ansibleChatbot.service && rm -rf /etc/systemd/system/ansibleChatbotWebInterface.service && rm -rf /home/chatbot/* && firewall-cmd --permanent --remove-port=8080/tcp && firewall-cmd --permanent --remove-port=9095/tcp
