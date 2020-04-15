@@ -7,8 +7,8 @@
     become_user: root
 
     vars:
-      disk1: "sdb"
-      disk2: "sdc"
+      disk1: "loop0"
+      disk2: "loop1"
 
     tasks:
 
